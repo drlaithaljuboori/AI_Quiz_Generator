@@ -15,6 +15,8 @@ def init_session_state():
         st.session_state.quiz_submitted = False
     if 'current_topic_id' not in st.session_state:
         st.session_state.current_topic_id = None
+    if 'previous_topic' not in st.session_state:
+        st.session_state.previous_topic = None
 
 def init_database():
     """Initialize SQLite database"""
@@ -108,9 +110,9 @@ def insert_sample_data(cursor, conn):
             topic
         )
     
-    # Quiz questions
+    # Quiz questions - Adding questions for ALL topics
     quiz_data = [
-        # Pump Fundamentals
+        # Pump Fundamentals (Topic 1)
         (1, "Which pump type uses an impeller to move fluid?", 
          '["Centrifugal Pump", "Piston Pump", "Gear Pump", "Diaphragm Pump"]', 
          "Centrifugal Pump", "multiple_choice"),
@@ -123,7 +125,15 @@ def insert_sample_data(cursor, conn):
          '["Impeller", "Volute Casing", "Shaft", "Seal"]', 
          "Volute Casing", "multiple_choice"),
         
-        # Compressors
+        (1, "What type of pump is best for high viscosity fluids?", 
+         '["Centrifugal Pump", "Positive Displacement Pump", "Jet Pump", "Turbine Pump"]', 
+         "Positive Displacement Pump", "multiple_choice"),
+        
+        (1, "The efficiency of a centrifugal pump is highest at:", 
+         '["Best Efficiency Point (BEP)", "Shut-off head", "Run-out point", "All operating points"]', 
+         "Best Efficiency Point (BEP)", "multiple_choice"),
+        
+        # Compressors (Topic 2)
         (2, "Which compressor type is best for high-pressure applications?", 
          '["Centrifugal Compressor", "Rotary Screw Compressor", "Reciprocating Compressor", "Axial Compressor"]', 
          "Reciprocating Compressor", "multiple_choice"),
@@ -132,7 +142,19 @@ def insert_sample_data(cursor, conn):
          '["Reduce power consumption", "Increase final pressure", "Cool gas between stages", "Lubricate parts"]', 
          "Cool gas between stages", "multiple_choice"),
         
-        # Measurement Devices
+        (2, "Which compressor type provides continuous, pulsation-free flow?", 
+         '["Reciprocating Compressor", "Centrifugal Compressor", "Diaphragm Compressor", "Rotary Vane Compressor"]', 
+         "Centrifugal Compressor", "multiple_choice"),
+        
+        (2, "The clearance volume in a reciprocating compressor affects:", 
+         '["Volumetric efficiency", "Motor speed", "Lubrication requirements", "Noise level"]', 
+         "Volumetric efficiency", "multiple_choice"),
+        
+        (2, "What safety device is essential on all air compressor receivers?", 
+         '["Pressure relief valve", "Temperature gauge", "Flow meter", "Moisture separator"]', 
+         "Pressure relief valve", "multiple_choice"),
+        
+        # Measurement Devices (Topic 3)
         (3, "What does a Venturi tube measure?", 
          '["Pressure", "Temperature", "Flow rate", "Viscosity"]', 
          "Flow rate", "multiple_choice"),
@@ -141,32 +163,80 @@ def insert_sample_data(cursor, conn):
          '["Pressure Gauge", "Pressure Transducer", "Manometer", "Bourdon Tube"]', 
          "Pressure Transducer", "multiple_choice"),
         
-        # Safety Procedures
+        (3, "What principle does a Venturi tube operate on?", 
+         '["Bernoulli\'s principle", "Pascal\'s principle", "Archimedes\' principle", "Newton\'s law"]', 
+         "Bernoulli\'s principle", "multiple_choice"),
+        
+        (3, "Which temperature sensor uses resistance change with temperature?", 
+         '["Thermocouple", "RTD", "Bimetallic strip", "Infrared sensor"]', 
+         "RTD", "multiple_choice"),
+        
+        (3, "A Bourdon tube is typically used in:", 
+         '["Flow meters", "Pressure gauges", "Temperature sensors", "Level indicators"]', 
+         "Pressure gauges", "multiple_choice"),
+        
+        # Safety Procedures (Topic 4)
         (4, "What should you check before starting a pump?", 
          '["Lubrication levels", "Weather conditions", "Operator certification", "Manufacturer name"]', 
          "Lubrication levels", "multiple_choice"),
         
-        (4, "What is Lockout-Tagout used for?", 
+        (4, "The correct sequence for pump startup is:", 
+         '["Open discharge, start pump, open suction", "Start pump, open suction, open discharge", "Open suction, start pump, open discharge", "Open suction, open discharge, start pump"]', 
+         "Open suction, start pump, open discharge", "multiple_choice"),
+        
+        (4, "What is the purpose of a safety valve?", 
+         '["Control flow rate", "Measure pressure", "Prevent overpressure", "Indicate temperature"]', 
+         "Prevent overpressure", "multiple_choice"),
+        
+        (4, "Lockout-Tagout procedures are used for:", 
          '["Increasing efficiency", "Energy isolation during maintenance", "Speed control", "Performance testing"]', 
          "Energy isolation during maintenance", "multiple_choice"),
         
-        # Cavitation
+        (4, "Before working on a pump, you should:", 
+         '["Drain the fluid", "Increase pressure", "Run at maximum speed", "Check weather forecast"]', 
+         "Drain the fluid", "multiple_choice"),
+        
+        # Cavitation (Topic 5)
         (5, "What causes cavitation in pumps?", 
-         '["High suction pressure", "Low suction pressure", "High discharge pressure", "Low viscosity"]', 
+         '["High suction pressure", "Low suction pressure", "High discharge pressure", "Low fluid viscosity"]', 
          "Low suction pressure", "multiple_choice"),
         
+        (5, "The formation and collapse of vapor bubbles in a pump is called:", 
+         '["Aeration", "Cavitation", "Turbulence", "Laminar flow"]', 
+         "Cavitation", "multiple_choice"),
+        
         (5, "What does NPSH stand for?", 
-         '["Net Positive Suction Head", "Negative Pressure System", "Normal Pump Suction", "National Pump Safety"]', 
+         '["Net Positive Suction Head", "Negative Pressure System Head", "Normal Pump Suction Height", "National Pump Safety Handbook"]', 
          "Net Positive Suction Head", "multiple_choice"),
         
-        # Performance Calculations
+        (5, "Which symptom indicates cavitation?", 
+         '["Smooth operation", "Reduced noise", "Knocking sounds", "Increased flow"]', 
+         "Knocking sounds", "multiple_choice"),
+        
+        (5, "To prevent cavitation, you should:", 
+         '["Increase suction lift", "Reduce NPSH available", "Increase fluid temperature", "Reduce suction line restrictions"]', 
+         "Reduce suction line restrictions", "multiple_choice"),
+        
+        # Performance Calculations (Topic 6)
         (6, "What is the formula for pump efficiency?", 
-         '["(Output Power / Input Power) × 100%", "(Input Power / Output Power) × 100%", "Output - Input Power", "Input × Output Power"]', 
+         '["(Output Power / Input Power) × 100%", "(Input Power / Output Power) × 100%", "Output Power - Input Power", "Input Power × Output Power"]', 
          "(Output Power / Input Power) × 100%", "multiple_choice"),
         
         (6, "Hydraulic power is calculated using:", 
          '["Flow rate and pressure", "Speed and torque", "Voltage and current", "Temperature and density"]', 
          "Flow rate and pressure", "multiple_choice"),
+        
+        (6, "The pressure ratio in compressors is defined as:", 
+         '["P1/P2", "P2/P1", "(P1+P2)/2", "P2-P1"]', 
+         "P2/P1", "multiple_choice"),
+        
+        (6, "What does a pump characteristic curve show?", 
+         '["Pump performance at different flow rates", "Pump material composition", "Pump manufacturing date", "Pump cost analysis"]', 
+         "Pump performance at different flow rates", "multiple_choice"),
+        
+        (6, "Volumetric efficiency in compressors compares:", 
+         '["Actual flow to theoretical flow", "Input power to output power", "Pressure ratio to temperature ratio", "Speed to torque"]', 
+         "Actual flow to theoretical flow", "multiple_choice"),
     ]
     
     for quiz in quiz_data:
@@ -244,21 +314,30 @@ def show_quizzes(cursor, conn):
     st.markdown('<div class="sub-header">📝 Multiple Choice Quizzes</div>', unsafe_allow_html=True)
     
     # Get topics for selection
-    cursor.execute("SELECT id, title, description FROM topics ORDER BY week, day")
-    topics = cursor.fetchall()
+    cursor.execute("SELECT id, week, day, title, description FROM topics ORDER BY week, day")
+    topics_data = cursor.fetchall()
     
-    if not topics:
+    if not topics_data:
         st.warning("No topics available. Please contact administrator.")
         return
     
-    topic_dict = {f"Week {week}, Day {day}: {title}": (id, description) 
-                 for id, week, day, title, description, pcs, content in cursor.execute("SELECT * FROM topics").fetchall()}
+    # Create topic dictionary with proper formatting
+    topic_dict = {}
+    for topic_id, week, day, title, description in topics_data:
+        display_name = f"Week {week}, Day {day}: {title}"
+        topic_dict[display_name] = (topic_id, description)
     
-    selected_topic = st.selectbox("🎯 Select a Topic:", list(topic_dict.keys()))
+    selected_topic_display = st.selectbox("🎯 Select a Topic:", list(topic_dict.keys()))
     
-    if selected_topic:
-        topic_id, description = topic_dict[selected_topic]
-        st.session_state.current_topic_id = topic_id
+    if selected_topic_display:
+        topic_id, description = topic_dict[selected_topic_display]
+        
+        # Reset question index if topic changed
+        if st.session_state.current_topic_id != topic_id:
+            st.session_state.current_question = 0
+            st.session_state.user_answers = {}
+            st.session_state.quiz_submitted = False
+            st.session_state.current_topic_id = topic_id
         
         st.info(f"**Topic Description:** {description}")
         
@@ -271,6 +350,7 @@ def show_quizzes(cursor, conn):
         
         if not questions:
             st.warning("No questions available for this topic yet.")
+            st.session_state.current_question = 0
             return
         
         # Display current question
@@ -297,9 +377,17 @@ def show_quizzes(cursor, conn):
 
 def display_question(questions, cursor, conn):
     """Display the current question"""
+    # Ensure current_question is within bounds
+    if st.session_state.current_question >= len(questions):
+        st.session_state.current_question = 0
+    
+    if not questions:
+        st.warning("No questions available for this topic.")
+        return
+    
     question_id, question, options_json, correct_answer = questions[st.session_state.current_question]
     
-    st.markdown(f'<div class="question-box">', unsafe_allow_html=True)
+    st.markdown('<div class="question-box">', unsafe_allow_html=True)
     
     # Question counter
     st.write(f"**Question {st.session_state.current_question + 1} of {len(questions)}**")
@@ -396,10 +484,9 @@ def show_ai_assistant(cursor):
     st.markdown('<div class="sub-header">🤖 AI Learning Assistant</div>', unsafe_allow_html=True)
     
     # Get topics for context
-    cursor.execute("SELECT id, title FROM topics ORDER BY week, day")
-    topics = cursor.fetchall()
-    topic_names = [f"Week {week}, Day {day}: {title}" 
-                  for id, week, day, title, description, pcs, content in cursor.execute("SELECT * FROM topics").fetchall()]
+    cursor.execute("SELECT id, week, day, title FROM topics ORDER BY week, day")
+    topics_data = cursor.fetchall()
+    topic_names = [f"Week {week}, Day {day}: {title}" for id, week, day, title in topics_data]
     
     selected_topic = st.selectbox("📚 Select Topic for Context:", topic_names)
     
@@ -409,9 +496,7 @@ def show_ai_assistant(cursor):
     # Sample questions from selected topic
     if selected_topic:
         # Extract topic ID
-        topic_id = [id for id, week, day, title, description, pcs, content 
-                   in cursor.execute("SELECT * FROM topics").fetchall() 
-                   if f"Week {week}, Day {day}: {title}" == selected_topic][0]
+        topic_id = [id for id, week, day, title in topics_data if f"Week {week}, Day {day}: {title}" == selected_topic][0]
         
         cursor.execute("SELECT question FROM quizzes WHERE topic_id=? LIMIT 5", (topic_id,))
         sample_questions = cursor.fetchall()
